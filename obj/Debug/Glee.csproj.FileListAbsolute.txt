@@ -1,0 +1,15 @@
+C:\Users\Eli\Desktop\Glee\Glee\bin\Debug\Glee.exe.config
+C:\Users\Eli\Desktop\Glee\Glee\bin\Debug\Glee.exe
+C:\Users\Eli\Desktop\Glee\Glee\bin\Debug\Glee.pdb
+C:\Users\Eli\Desktop\Glee\Glee\bin\Debug\Microsoft.Msagl.pdb
+C:\Users\Eli\Desktop\Glee\Glee\bin\Debug\Microsoft.Msagl.xml
+C:\Users\Eli\Desktop\Glee\Glee\bin\Debug\Microsoft.Msagl.Drawing.pdb
+C:\Users\Eli\Desktop\Glee\Glee\bin\Debug\Microsoft.Msagl.Drawing.xml
+C:\Users\Eli\Desktop\Glee\Glee\bin\Debug\Microsoft.Msagl.GraphViewerGdi.pdb
+C:\Users\Eli\Desktop\Glee\Glee\bin\Debug\Microsoft.Msagl.GraphViewerGdi.xml
+C:\Users\Eli\Desktop\Glee\Glee\obj\Debug\Glee.csprojResolveAssemblyReference.cache
+C:\Users\Eli\Desktop\Glee\Glee\obj\Debug\Glee.Properties.Resources.resources
+C:\Users\Eli\Desktop\Glee\Glee\obj\Debug\Glee.csproj.GenerateResource.Cache
+C:\Users\Eli\Desktop\Glee\Glee\obj\Debug\Glee.exe
+C:\Users\Eli\Desktop\Glee\Glee\obj\Debug\Glee.pdb
+C:\Users\Eli\Desktop\Glee\Glee\obj\Debug\Glee.Form1.resources
