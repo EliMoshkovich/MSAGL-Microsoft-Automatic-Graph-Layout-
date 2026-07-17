@@ -1,0 +1,38 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+
+# Visual Studio user/IDE files
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.vshost.exe
+*.vshost.exe.*
+
+# Build artifacts
+*.pdb
+*.cache
+*.log
+*.tlog
+
+# NuGet
+packages/
+*.nupkg
+
+# ReSharper
+_ReSharper*/
+*.DotSettings.user
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Keep the referenced MSAGL binaries under lib/
+!lib/*.dll
+!lib/*.xml
