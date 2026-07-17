@@ -54,6 +54,7 @@ Graph layout and rendering are provided by
 [Microsoft Automatic Graph Layout (MSAGL)](https://github.com/microsoft/automatic-graph-layout),
 Copyright (c) Microsoft Corporation, released under the
 [MIT License](https://github.com/microsoft/automatic-graph-layout/blob/master/LICENSE).
-The binaries in `lib/` are redistributed from that project, and the UI code in
-`Form1.cs` started from MSAGL's `WindowsApplicationSample` demo. This
+The binaries in `lib/` are redistributed from that project under that license —
+the full license text is included in [`lib/MSAGL-LICENSE.txt`](lib/MSAGL-LICENSE.txt).
+The UI code in `Form1.cs` started from MSAGL's `WindowsApplicationSample` demo. This
 repository is not affiliated with or endorsed by Microsoft.
