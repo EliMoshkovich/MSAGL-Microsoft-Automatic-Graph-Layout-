@@ -173,19 +173,19 @@ namespace WindowsApplicationSample {
             DisplayGeometryGraph.SetShowFunctions();
 #endif
 
-            // * * * * * * * * * * *  start creation the graph task * * * * * * * * * * *  
+            // * * * * * * * * * * *  start of graph creation  * * * * * * * * * * *
 
             List<ObjectTable> list;
 
             //SQL connection
             using (SQL_Manager sql = new SQL_Manager())
             {
-                list = sql.getObjectTableList();
+                list = sql.GetObjectTableList();
             }
 
             if (list == null)
             {
-                MessageBox.Show("Error to get Object for drawing");
+                MessageBox.Show("Failed to load the schema from SQL Server.");
                 return;
             }
 
@@ -197,13 +197,13 @@ namespace WindowsApplicationSample {
             //create the graph content
             foreach (var itemA in list)
             {
-                // get all the keys of the table name
-                string str = "" + itemA.TableName + ":\n"; // add table name, for the uniqe id
+                // collect the table's primary-key columns
+                string str = itemA.TableName + ":\n"; // prepend the table name so the node id is unique
                 string keys = "";
-                foreach (string key in itemA.primary_Keys) keys += key + '\n';
+                foreach (string key in itemA.PrimaryKeys) keys += key + '\n';
                 str += keys;
 
-                // add the node to graph and remove the edge
+                // add a self-edge to create the node, then remove the edge
                 var e = graph.AddEdge(str, str);
                 graph.RemoveEdge(e);
 
@@ -216,7 +216,7 @@ namespace WindowsApplicationSample {
                 var n = graph.FindNode(str);
                 n.Attr.FillColor = Color.Cyan;
                 table_as_subgraph.AddNode(n);
-                n.LabelText = keys; // udate the text without table name
+                n.LabelText = keys; // show only the key columns, without the table name
 
                 // add the subgraph to the root subgraph
                 subgraph.AddSubgraph(table_as_subgraph);
@@ -224,14 +224,14 @@ namespace WindowsApplicationSample {
                 //graph.Attr.LayerDirection = LayerDirection.LR;
             }
 
-            // add the edges between the correct table object (subgraph) according to fk to pk
+            // connect the table subgraphs: an edge for every FK column that matches another table's PK column
             foreach (var itemA in list)
             {
-                foreach (var col in itemA.forigen_Keys)
+                foreach (var col in itemA.ForeignKeys)
                 {
                     foreach (var itemB in list)
                     {
-                        if (itemA != itemB && itemB.primary_Keys.Contains(col))
+                        if (itemA != itemB && itemB.PrimaryKeys.Contains(col))
                         {
                             graph.AddEdge(itemA.TableName, itemB.TableName);
                         }
@@ -240,53 +240,53 @@ namespace WindowsApplicationSample {
                 }
             }
 
-            // * * * * * * * * * * *  end creation the graph task * * * * * * * * * * * 
+            // * * * * * * * * * * *  end of graph creation  * * * * * * * * * * *
 
             //layout the graph and draw it
             gViewer.Graph = graph;
-                //this.propertyGrid1.SelectedObject = graph;
-            }
+            //this.propertyGrid1.SelectedObject = graph;
+        }
 
-            void RecalculateLayoutButtonClick(object sender, EventArgs e) {
-                //gViewer.Graph = propertyGrid1.SelectedObject as Graph;
-            }
+        void RecalculateLayoutButtonClick(object sender, EventArgs e) {
+            //gViewer.Graph = propertyGrid1.SelectedObject as Graph;
+        }
 
 
-            bool MouseDownPointAndMouseUpPointsAreFarEnough()
-            {
-                double dx = myMouseDownPoint.X - myMouseUpPoint.X;
-                double dy = myMouseDownPoint.Y - myMouseUpPoint.Y;
-            
-                return dx*dx + dy*dy >= 25; //so 5X5 pixels already give something
-            }
+        bool MouseDownPointAndMouseUpPointsAreFarEnough()
+        {
+            double dx = myMouseDownPoint.X - myMouseUpPoint.X;
+            double dy = myMouseDownPoint.Y - myMouseUpPoint.Y;
 
-            void ShowObjectsInTheLastRectClick(object sender, EventArgs e) {
-                string message;
-                if(gViewer.Graph==null) {
-                    message = "there is no graph";
-                }else {
-                    if (MouseDownPointAndMouseUpPointsAreFarEnough()) {
-                        var p0 = gViewer.ScreenToSource(myMouseDownPoint);
-                        var p1 = gViewer.ScreenToSource(myMouseUpPoint);
-                        var rubberRect = new Microsoft.Msagl.Core.Geometry.Rectangle(p0, p1);
-                        var stringB = new StringBuilder();
-                        foreach (var node in gViewer.Graph.Nodes)
-                            if (rubberRect.Contains(node.BoundingBox))
-                                stringB.Append(node.LabelText + "\n");
+            return dx*dx + dy*dy >= 25; //so 5X5 pixels already give something
+        }
 
-                        foreach (var edge in gViewer.Graph.Edges)
-                            if (rubberRect.Contains(edge.BoundingBox))
-                                stringB.Append(String.Format("edge from {0} to {1}\n", edge.SourceNode.LabelText,
-                                                             edge.TargetNode.LabelText));
+        void ShowObjectsInTheLastRectClick(object sender, EventArgs e) {
+            string message;
+            if(gViewer.Graph==null) {
+                message = "there is no graph";
+            }else {
+                if (MouseDownPointAndMouseUpPointsAreFarEnough()) {
+                    var p0 = gViewer.ScreenToSource(myMouseDownPoint);
+                    var p1 = gViewer.ScreenToSource(myMouseUpPoint);
+                    var rubberRect = new Microsoft.Msagl.Core.Geometry.Rectangle(p0, p1);
+                    var stringB = new StringBuilder();
+                    foreach (var node in gViewer.Graph.Nodes)
+                        if (rubberRect.Contains(node.BoundingBox))
+                            stringB.Append(node.LabelText + "\n");
 
-                        message = stringB.ToString();
-                    }
-                    else
-                        message = "the window is not defined";
+                    foreach (var edge in gViewer.Graph.Edges)
+                        if (rubberRect.Contains(edge.BoundingBox))
+                            stringB.Append(String.Format("edge from {0} to {1}\n", edge.SourceNode.LabelText,
+                                                         edge.TargetNode.LabelText));
+
+                    message = stringB.ToString();
                 }
-
-                MessageBox.Show(message);
-
+                else
+                    message = "the window is not defined";
             }
+
+            MessageBox.Show(message);
+
+        }
     }
 }

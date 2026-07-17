@@ -9,12 +9,12 @@ against the **AdventureWorks2014** sample database.
 
 - Connects to a SQL Server instance and reads key/constraint metadata from
   `INFORMATION_SCHEMA.KEY_COLUMN_USAGE` (see `SQL_Server/SQL_Manager.cs`).
-- Builds one node per table (labelled with the table's key columns), grouped
-  into a sub-graph per table, all nested under an "Adventure 2014" root
-  sub-graph.
-- Adds a directed edge from a table's foreign-key column to every table whose
-  primary key matches that column, so the drawing approximates the FK → PK
-  relationships of the database.
+- Builds one node per table (labelled with the table's primary-key columns),
+  grouped into a sub-graph per table, all nested under an "Adventure 2014"
+  root sub-graph.
+- Adds a directed edge from each table to every table whose primary-key
+  column matches one of its foreign-key column names, so the drawing
+  approximates the FK → PK relationships of the database.
 - Renders the result in MSAGL's `GViewer` control: automatic layout,
   mouse-wheel zoom, node dragging, and hover highlighting/tooltips for nodes
   and edges (`Form1.cs`).

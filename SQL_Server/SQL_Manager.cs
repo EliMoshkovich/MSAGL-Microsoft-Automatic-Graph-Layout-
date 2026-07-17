@@ -1,49 +1,46 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Configuration;
-using System.Data.SqlClient;
 using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace WindowsApplicationSample
 {
     public class SQL_Manager : IDisposable
     {
-        // the Const Variable connection string to the SQL_SERVER 2014
+        // Default connection string: local SQL Server Express with the AdventureWorks2014 sample database
         private const string CONNECTION_STRING = @"Data Source=DESKTOP-20Q82NL\SQLEXPRESS;Initial Catalog=AdventureWorks2014;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
-        // the string object of connection string
-        private string connetionString;
-        // the Const Variable of the query that get data from the database of: Table name, and kinf of the keys
-        private const string QUERY = "SELECT TABLE_NAME, TABLE_SCHEMA ,COLUMN_NAME, CONSTRAINT_NAME  FROM  INFORMATION_SCHEMA.KEY_COLUMN_USAGE";
-       
-        // variable to handler the conect to sql 
-        public SqlCommand sqlCommand { get; set; }
+        // Connection string actually used by this instance
+        private string connectionString;
+        // Query that returns every key column in the database together with its constraint name
+        private const string QUERY = "SELECT TABLE_NAME, TABLE_SCHEMA, COLUMN_NAME, CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE";
+
+        // Command that will be executed against the connection
+        public SqlCommand Command { get; private set; }
         private SqlConnection sqlcon;
 
-        // Ctor with the custom of the connection string 
-        public SQL_Manager(string connetionString)
+        // Ctor with a custom connection string
+        public SQL_Manager(string connectionString)
         {
-            this.connetionString = connetionString;
-            openConnection();
-            setQuery(QUERY);
+            this.connectionString = connectionString;
+            OpenConnection();
+            SetQuery(QUERY);
         }
-        // Default Ctor that use the default const string of connection string 
+        // Default ctor that uses the default connection string
         public SQL_Manager()
         {
-            this.connetionString = CONNECTION_STRING;
-            openConnection();
-            setQuery(QUERY);
+            this.connectionString = CONNECTION_STRING;
+            OpenConnection();
+            SetQuery(QUERY);
         }
 
-        // open connection by the connection string to sql object
-        public bool openConnection()
+        // Open a connection using the connection string
+        public bool OpenConnection()
         {
             try
             {
-                sqlcon = new SqlConnection(connetionString);
+                sqlcon = new SqlConnection(connectionString);
                 sqlcon.Open();
                 return true;
             }
@@ -53,8 +50,8 @@ namespace WindowsApplicationSample
             }
         }
 
-        // close the connection of sql
-        public bool closeConnection()
+        // Close the SQL connection
+        public bool CloseConnection()
         {
             try
             {
@@ -67,60 +64,59 @@ namespace WindowsApplicationSample
             }
         }
 
-        // get SqlCommand from custom query
-        public SqlCommand setQuery(string query)
+        // Build a SqlCommand for a custom query
+        public SqlCommand SetQuery(string query)
         {
-            sqlCommand = new SqlCommand(query, sqlcon);
-            return sqlCommand;
+            Command = new SqlCommand(query, sqlcon);
+            return Command;
         }
 
-        // get the list of all the colums from the tables in database
-        public List<ObjectTable> getObjectTableList()
+        // Read the key columns of every table and group them into one ObjectTable per table
+        public List<ObjectTable> GetObjectTableList()
         {
             try
             {
-                // get data from database into the ds.Tables[0] object
+                // fetch the query results into ds.Tables[0]
                 SqlDataAdapter sda = new SqlDataAdapter();
                 DataSet ds = new DataSet();
-                sda.SelectCommand = this.sqlCommand;
+                sda.SelectCommand = this.Command;
                 sda.Fill(ds);
 
-                List<CSTable> listTable = new List<CSTable>();
-                listTable = ds.Tables[0].AsEnumerable().Select(dataRow => new CSTable
+                List<CSTable> listTable = ds.Tables[0].AsEnumerable().Select(dataRow => new CSTable
                 {
                     TableName = dataRow.Field<string>("TABLE_SCHEMA") + "." + dataRow.Field<string>("TABLE_NAME"),
-                    ColumnsName = dataRow.Field<string>("COLUMN_NAME"),
-                    isPrimaryKey = dataRow.Field<string>("CONSTRAINT_NAME").StartsWith("PK", StringComparison.Ordinal)
+                    ColumnName = dataRow.Field<string>("COLUMN_NAME"),
+                    IsPrimaryKey = dataRow.Field<string>("CONSTRAINT_NAME").StartsWith("PK", StringComparison.Ordinal)
                 }).ToList();
 
-                // create list of the all tables with there Primay keys, and Forigen keys
+                // build the list of all tables with their primary and foreign keys
                 List<ObjectTable> listObject = new List<ObjectTable>();
 
-                for (int i = 0; listTable != null && i < listTable.Count; i++)
+                for (int i = 0; i < listTable.Count; i++)
                 {
-                    CSTable OneTable = listTable.ElementAt(i);
-                    ObjectTable ot = new ObjectTable(OneTable.TableName);
+                    CSTable oneTable = listTable[i];
+                    ObjectTable ot = new ObjectTable(oneTable.TableName);
 
                     for (int j = 0; j < listTable.Count; j++)
                     {
-                        CSTable table = listTable.ElementAt(j);
+                        CSTable table = listTable[j];
 
-                        if (OneTable.TableName.Equals(table.TableName))
+                        if (oneTable.TableName.Equals(table.TableName))
                         {
-                            if (table.isPrimaryKey)
+                            if (table.IsPrimaryKey)
                             {
-                                if(!ot.primary_Keys.Contains(table.ColumnsName)) // check if this not allready exist in the list pk
-                                    ot.primary_Keys.Add(table.ColumnsName);
+                                if (!ot.PrimaryKeys.Contains(table.ColumnName)) // skip columns already in the PK list
+                                    ot.PrimaryKeys.Add(table.ColumnName);
                             }
                             else
                             {
-                                if (!ot.forigen_Keys.Contains(table.ColumnsName)) // check if this not allready exist in the list fk
-                                    ot.forigen_Keys.Add(table.ColumnsName);
+                                if (!ot.ForeignKeys.Contains(table.ColumnName)) // skip columns already in the FK list
+                                    ot.ForeignKeys.Add(table.ColumnName);
                             }
                         }
                     }
 
-                    // check if this table allready exist if so, add the PK's and FK's to the list keys if dont existed, else add it to the list
+                    // if this table is already in the result, merge any missing keys into it; otherwise add it
                     bool exist = false;
                     foreach (var it in listObject)
                     {
@@ -130,18 +126,18 @@ namespace WindowsApplicationSample
                         }
                         if (exist)
                         {
-                            foreach (var pk in ot.primary_Keys)
+                            foreach (var pk in ot.PrimaryKeys)
                             {
-                                if (!it.primary_Keys.Contains(pk))
+                                if (!it.PrimaryKeys.Contains(pk))
                                 {
-                                    it.primary_Keys.Add(pk);
+                                    it.PrimaryKeys.Add(pk);
                                 }
                             }
-                            foreach (var fk in ot.forigen_Keys)
+                            foreach (var fk in ot.ForeignKeys)
                             {
-                                if (!it.forigen_Keys.Contains(fk))
+                                if (!it.ForeignKeys.Contains(fk))
                                 {
-                                    it.forigen_Keys.Add(fk);
+                                    it.ForeignKeys.Add(fk);
                                 }
                             }
                             break;
@@ -150,7 +146,7 @@ namespace WindowsApplicationSample
                     if (!exist)
                         listObject.Add(ot);
                 }
-                
+
                 return listObject;
             }
             catch (Exception er)
@@ -163,7 +159,7 @@ namespace WindowsApplicationSample
         // Release the underlying SQL connection
         public void Dispose()
         {
-            closeConnection();
+            CloseConnection();
         }
     }
 }
