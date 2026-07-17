@@ -175,17 +175,19 @@ namespace WindowsApplicationSample {
 
             // * * * * * * * * * * *  start creation the graph task * * * * * * * * * * *  
 
-            SQL_Manager sql = new SQL_Manager();
-            List<ObjectTable> list = new List<ObjectTable>();
+            List<ObjectTable> list;
 
             //SQL connection
-            if ((list = sql.getObjectTableList()) == null)
+            using (SQL_Manager sql = new SQL_Manager())
+            {
+                list = sql.getObjectTableList();
+            }
+
+            if (list == null)
             {
                 MessageBox.Show("Error to get Object for drawing");
                 return;
             }
-
-            List<Microsoft.Msagl.Drawing.Node> nodesList = new List<Microsoft.Msagl.Drawing.Node>();
 
             Graph graph = new Graph();
 

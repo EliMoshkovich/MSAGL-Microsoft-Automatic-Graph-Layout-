@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 namespace WindowsApplicationSample
 {
-    public class SQL_Manager
+    public class SQL_Manager : IDisposable
     {
         // the Const Variable connection string to the SQL_SERVER 2014
         private const string CONNECTION_STRING = @"Data Source=DESKTOP-20Q82NL\SQLEXPRESS;Initial Catalog=AdventureWorks2014;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
@@ -84,14 +84,13 @@ namespace WindowsApplicationSample
                 DataSet ds = new DataSet();
                 sda.SelectCommand = this.sqlCommand;
                 sda.Fill(ds);
-                sda.Update(ds);
 
                 List<CSTable> listTable = new List<CSTable>();
                 listTable = ds.Tables[0].AsEnumerable().Select(dataRow => new CSTable
                 {
                     TableName = dataRow.Field<string>("TABLE_SCHEMA") + "." + dataRow.Field<string>("TABLE_NAME"),
                     ColumnsName = dataRow.Field<string>("COLUMN_NAME"),
-                    isPrimaryKey = dataRow.Field<string>("CONSTRAINT_NAME").Substring(0, 2).Equals("PK") ? true : false
+                    isPrimaryKey = dataRow.Field<string>("CONSTRAINT_NAME").StartsWith("PK", StringComparison.Ordinal)
                 }).ToList();
 
                 // create list of the all tables with there Primay keys, and Forigen keys
@@ -161,8 +160,8 @@ namespace WindowsApplicationSample
             return null;
         }
 
-        // Dtor to handler the close connetion, if there isn't reference to the object
-        protected virtual void Finalize()
+        // Release the underlying SQL connection
+        public void Dispose()
         {
             closeConnection();
         }
